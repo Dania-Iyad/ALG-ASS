@@ -3,10 +3,12 @@
 #include <ctime>
 #include <chrono>
 #include <iomanip>
+#include <string>
 
 using namespace std;
 using namespace std::chrono;
 
+const int NUM_RUNS = 5; 
 
 void generate_data(int arr[], int size, const string& data_type) {
     if (data_type == "random") {
@@ -25,7 +27,6 @@ void generate_data(int arr[], int size, const string& data_type) {
         for (int i = 0; i < size; i++) {
             arr[i] = i + 1;
         }
-        
         for (int i = 0; i < size / 10; i++) {
             swap(arr[rand() % size], arr[rand() % size]);
         }
@@ -92,59 +93,64 @@ void quick_sort(int arr[], int low, int high) {
     }
 }
 
-//Measure Execution Time:
 double measure_time(void (*sort_func)(int[], int), int arr[], int size) {
     auto start = high_resolution_clock::now();
     sort_func(arr, size);
     auto stop = high_resolution_clock::now();
-    return duration_cast<microseconds>(stop - start).count() / 1000000.0;
+    return duration_cast<microseconds>(stop - start).count() / 1e6;
 }
 
+// قياس الوقت للـ void sort(int[], int, int)
 double measure_time(void (*sort_func)(int[], int, int), int arr[], int l, int r) {
     auto start = high_resolution_clock::now();
     sort_func(arr, l, r);
     auto stop = high_resolution_clock::now();
-    return duration_cast<microseconds>(stop - start).count() / 1000000.0;
+    return duration_cast<microseconds>(stop - start).count() / 1e6;
 }
 
 int main() {
-    srand(time(0)); 
-    const int sizes[] = {100, 1000, 10000}; 
+    srand(time(0));
+    const int sizes[] = {100, 1000, 10000};
     const char* types[] = {"random", "sorted", "reverse", "partial"};
-    
-    cout << "Sorting Algorithm Performance Comparison\n";
+
+    cout << "Sorting Algorithm Average Execution Time (over " << NUM_RUNS << " runs)\n";
     cout << "Size\tType\t\tBubble Sort\tMerge Sort\tQuick Sort\n";
-    
+
     for (int size : sizes) {
         int* original = new int[size];
-        
+
         for (const char* type : types) {
-            generate_data(original, size, type);
-            
-            // Bubble Sort
-            int* bubble_arr = new int[size];
-            copy(original, original + size, bubble_arr);
-            double bubble_time = measure_time(bubble_sort, bubble_arr, size);
-            delete[] bubble_arr;
-            
-            // Merge Sort
-            int* merge_arr = new int[size];
-            copy(original, original + size, merge_arr);
-            double merge_time = measure_time(merge_sort, merge_arr, 0, size - 1);
-            delete[] merge_arr;
-            
-            // Quick Sort
-            int* quick_arr = new int[size];
-            copy(original, original + size, quick_arr);
-            double quick_time = measure_time(quick_sort, quick_arr, 0, size - 1);
-            delete[] quick_arr;
-            
-            cout << size << "\t" << type << "\t" << fixed << setprecision(6) 
-                 << bubble_time << " s\t" << merge_time << " s\t" << quick_time << " s\n";
+            double bubble_sum = 0, merge_sum = 0, quick_sum = 0;
+
+            for (int run = 0; run < NUM_RUNS; run++) {
+                generate_data(original, size, type);
+
+                int* bubble_arr = new int[size];
+                int* merge_arr = new int[size];
+                int* quick_arr = new int[size];
+                copy(original, original + size, bubble_arr);
+                copy(original, original + size, merge_arr);
+                copy(original, original + size, quick_arr);
+
+                bubble_sum += measure_time(bubble_sort, bubble_arr, size);
+                merge_sum  += measure_time(merge_sort, merge_arr, 0, size - 1);
+                quick_sum  += measure_time(quick_sort, quick_arr, 0, size - 1);
+
+                delete[] bubble_arr;
+                delete[] merge_arr;
+                delete[] quick_arr;
+            }
+
+            double bubble_avg = bubble_sum / NUM_RUNS;
+            double merge_avg = merge_sum / NUM_RUNS;
+            double quick_avg = quick_sum / NUM_RUNS;
+
+            cout << size << "\t" << type << "\t" << fixed << setprecision(6)
+                 << bubble_avg << " s\t" << merge_avg << " s\t" << quick_avg << " s\n";
         }
-        
+
         delete[] original;
     }
-    
+
     return 0;
 }
