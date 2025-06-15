@@ -74,6 +74,31 @@ void printVector(vector<int>& arr)
     cout << endl;
 }
 
+//function to generate different sets of test data
+void merge(int arr[], int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+    int* L = new int[n1];
+    int* R = new int[n2];
+    for (int i = 0; i &lt; n1; i++) L[i] = arr[left + i];
+    for (int j = 0; j &lt; n2; j++) R[j] = arr[mid + 1 + j];
+    int i = 0, j = 0, k = left;
+    while (i &lt; n1 && j &lt; n2)
+        arr[k++] = (L[i] &lt;= R[j]) ? L[i++] : R[j++];
+    while (i &lt; n1) arr[k++] = L[i++];
+    while (j &lt; n2) arr[k++] = R[j++];
+    delete[] L;
+    delete[] R;
+}
+void mergeSort(int arr[], int left, int right) {
+    if (left &lt; right) {
+        int mid = left + (right - left) / 2;
+        mergeSort(arr, left, mid);
+        mergeSort(arr, mid + 1, right);
+        merge(arr, left, mid, right);
+    }
+}
+
 // Driver code
 int main()
 {

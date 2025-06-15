@@ -1,0 +1,150 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <chrono>
+#include <iomanip>
+
+using namespace std;
+using namespace std::chrono;
+
+
+void generate_data(int arr[], int size, const string& data_type) {
+    if (data_type == "random") {
+        for (int i = 0; i < size; i++) {
+            arr[i] = rand() % 100000 + 1;
+        }
+    } else if (data_type == "sorted") {
+        for (int i = 0; i < size; i++) {
+            arr[i] = i + 1;
+        }
+    } else if (data_type == "reverse") {
+        for (int i = 0; i < size; i++) {
+            arr[i] = size - i;
+        }
+    } else if (data_type == "partial") {
+        for (int i = 0; i < size; i++) {
+            arr[i] = i + 1;
+        }
+        
+        for (int i = 0; i < size / 10; i++) {
+            swap(arr[rand() % size], arr[rand() % size]);
+        }
+    }
+}
+
+// Bubble Sort
+void bubble_sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
+            }
+        }
+    }
+}
+
+// Merge Sort
+void merge(int arr[], int l, int m, int r) {
+    int n1 = m - l + 1, n2 = r - m;
+    int* L = new int[n1];
+    int* R = new int[n2];
+
+    for (int i = 0; i < n1; i++) L[i] = arr[l + i];
+    for (int j = 0; j < n2; j++) R[j] = arr[m + 1 + j];
+
+    int i = 0, j = 0, k = l;
+    while (i < n1 && j < n2) {
+        arr[k++] = (L[i] <= R[j]) ? L[i++] : R[j++];
+    }
+    while (i < n1) arr[k++] = L[i++];
+    while (j < n2) arr[k++] = R[j++];
+
+    delete[] L;
+    delete[] R;
+}
+
+void merge_sort(int arr[], int l, int r) {
+    if (l < r) {
+        int m = l + (r - l) / 2;
+        merge_sort(arr, l, m);
+        merge_sort(arr, m + 1, r);
+        merge(arr, l, m, r);
+    }
+}
+
+// Quick Sort
+int partition(int arr[], int low, int high) {
+    int pivot = arr[high], i = low - 1;
+    for (int j = low; j < high; j++) {
+        if (arr[j] < pivot) {
+            swap(arr[++i], arr[j]);
+        }
+    }
+    swap(arr[i + 1], arr[high]);
+    return i + 1;
+}
+
+void quick_sort(int arr[], int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        quick_sort(arr, low, pi - 1);
+        quick_sort(arr, pi + 1, high);
+    }
+}
+
+//Measure Execution Time:
+double measure_time(void (*sort_func)(int[], int), int arr[], int size) {
+    auto start = high_resolution_clock::now();
+    sort_func(arr, size);
+    auto stop = high_resolution_clock::now();
+    return duration_cast<microseconds>(stop - start).count() / 1000000.0;
+}
+
+double measure_time(void (*sort_func)(int[], int, int), int arr[], int l, int r) {
+    auto start = high_resolution_clock::now();
+    sort_func(arr, l, r);
+    auto stop = high_resolution_clock::now();
+    return duration_cast<microseconds>(stop - start).count() / 1000000.0;
+}
+
+int main() {
+    srand(time(0)); 
+    const int sizes[] = {100, 1000, 10000}; 
+    const char* types[] = {"random", "sorted", "reverse", "partial"};
+    
+    cout << "Sorting Algorithm Performance Comparison\n";
+    cout << "Size\tType\t\tBubble Sort\tMerge Sort\tQuick Sort\n";
+    
+    for (int size : sizes) {
+        int* original = new int[size];
+        
+        for (const char* type : types) {
+            generate_data(original, size, type);
+            
+            // Bubble Sort
+            int* bubble_arr = new int[size];
+            copy(original, original + size, bubble_arr);
+            double bubble_time = measure_time(bubble_sort, bubble_arr, size);
+            delete[] bubble_arr;
+            
+            // Merge Sort
+            int* merge_arr = new int[size];
+            copy(original, original + size, merge_arr);
+            double merge_time = measure_time(merge_sort, merge_arr, 0, size - 1);
+            delete[] merge_arr;
+            
+            // Quick Sort
+            int* quick_arr = new int[size];
+            copy(original, original + size, quick_arr);
+            double quick_time = measure_time(quick_sort, quick_arr, 0, size - 1);
+            delete[] quick_arr;
+            
+            cout << size << "\t" << type << "\t" << fixed << setprecision(6) 
+                 << bubble_time << " s\t" << merge_time << " s\t" << quick_time << " s\n";
+        }
+        
+        delete[] original;
+    }
+    
+    return 0;
+}

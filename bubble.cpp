@@ -34,3 +34,17 @@ int main() {
     printVector(arr);
     return 0;
 }
+ 
+//function to generate different sets of test data
+void bubbleSort(int arr[], int n) {
+    for (int i = 0; i &lt; n - 1; i++) {
+        bool swapped = false;
+        for (int j = 0; j &lt; n - i - 1; j++) {
+            if (arr[j] &gt; arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+    }
+}
