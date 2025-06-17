@@ -1,74 +1,95 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
-#include <chrono>
 #include <iomanip>
-#include <string>
-
+#include <cstring>
 using namespace std;
-using namespace std::chrono;
 
-const int NUM_RUNS = 5; 
+const int NUM_RUNS = 5;
+const int NUM_SIZES = 4;
+const int sizes[NUM_SIZES] = {100, 1000, 10000, 20000};
 
-void generate_data(int arr[], int size, const string& data_type) {
-    if (data_type == "random") {
-        for (int i = 0; i < size; i++) {
-            arr[i] = rand() % 100000 + 1;
-        }
-    } else if (data_type == "sorted") {
-        for (int i = 0; i < size; i++) {
-            arr[i] = i + 1;
-        }
-    } else if (data_type == "reverse") {
-        for (int i = 0; i < size; i++) {
+const int NUM_TYPES = 10;
+const char* types[NUM_TYPES] = {
+    "random", "sorted", "reverse", "partial", "same",
+    "even", "odd", "duplicates", "unique", "zigzag"
+};
+
+// دالة توليد البيانات حسب النوع
+void generate_data(int arr[], int size, const char* type) {
+    if (strcmp(type, "random") == 0) {
+        for (int i = 0; i < size; ++i)
+            arr[i] = rand() % 100000;
+    }
+    else if (strcmp(type, "sorted") == 0) {
+        for (int i = 0; i < size; ++i)
+            arr[i] = i;
+    }
+    else if (strcmp(type, "reverse") == 0) {
+        for (int i = 0; i < size; ++i)
             arr[i] = size - i;
-        }
-    } else if (data_type == "partial") {
-        for (int i = 0; i < size; i++) {
-            arr[i] = i + 1;
-        }
-        for (int i = 0; i < size / 10; i++) {
-            swap(arr[rand() % size], arr[rand() % size]);
-        }
+    }
+    else if (strcmp(type, "partial") == 0) {
+        for (int i = 0; i < size / 2; ++i)
+            arr[i] = i;
+        for (int i = size / 2; i < size; ++i)
+            arr[i] = rand() % 100000;
+    }
+    else if (strcmp(type, "same") == 0) {
+        for (int i = 0; i < size; ++i)
+            arr[i] = 1;
+    }
+    else if (strcmp(type, "even") == 0) {
+        for (int i = 0; i < size; ++i)
+            arr[i] = (rand() % 50000) * 2;
+    }
+    else if (strcmp(type, "odd") == 0) {
+        for (int i = 0; i < size; ++i)
+            arr[i] = (rand() % 50000) * 2 + 1;
+    }
+    else if (strcmp(type, "duplicates") == 0) {
+        int vals[] = {5, 10, 20, 30, 40};
+        for (int i = 0; i < size; ++i)
+            arr[i] = vals[rand() % 5];
+    }
+    else if (strcmp(type, "unique") == 0) {
+        for (int i = 0; i < size; ++i)
+            arr[i] = i * 3;
+    }
+    else if (strcmp(type, "zigzag") == 0) {
+        int low = 1, high = size * 2;
+        for (int i = 0; i < size; ++i)
+            arr[i] = (i % 2 == 0) ? low++ : high--;
     }
 }
 
 // Bubble Sort
-void bubble_sort(int arr[], int n) {
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
+void bubbleSort(int arr[], int size) {
+    for (int i = 0; i < size - 1; ++i)
+        for (int j = 0; j < size - i - 1; ++j)
+            if (arr[j] > arr[j + 1])
                 swap(arr[j], arr[j + 1]);
-            }
-        }
-    }
 }
 
 // Merge Sort
 void merge(int arr[], int l, int m, int r) {
     int n1 = m - l + 1, n2 = r - m;
-    int* L = new int[n1];
-    int* R = new int[n2];
-
-    for (int i = 0; i < n1; i++) L[i] = arr[l + i];
-    for (int j = 0; j < n2; j++) R[j] = arr[m + 1 + j];
-
+    int* L = new int[n1], *R = new int[n2];
+    for (int i = 0; i < n1; ++i) L[i] = arr[l + i];
+    for (int i = 0; i < n2; ++i) R[i] = arr[m + 1 + i];
     int i = 0, j = 0, k = l;
-    while (i < n1 && j < n2) {
+    while (i < n1 && j < n2)
         arr[k++] = (L[i] <= R[j]) ? L[i++] : R[j++];
-    }
     while (i < n1) arr[k++] = L[i++];
     while (j < n2) arr[k++] = R[j++];
-
     delete[] L;
     delete[] R;
 }
-
-void merge_sort(int arr[], int l, int r) {
+void mergeSort(int arr[], int l, int r) {
     if (l < r) {
         int m = l + (r - l) / 2;
-        merge_sort(arr, l, m);
-        merge_sort(arr, m + 1, r);
+        mergeSort(arr, l, m);
+        mergeSort(arr, m + 1, r);
         merge(arr, l, m, r);
     }
 }
@@ -76,50 +97,45 @@ void merge_sort(int arr[], int l, int r) {
 // Quick Sort
 int partition(int arr[], int low, int high) {
     int pivot = arr[high], i = low - 1;
-    for (int j = low; j < high; j++) {
-        if (arr[j] < pivot) {
+    for (int j = low; j < high; ++j)
+        if (arr[j] < pivot)
             swap(arr[++i], arr[j]);
-        }
-    }
     swap(arr[i + 1], arr[high]);
     return i + 1;
 }
-
-void quick_sort(int arr[], int low, int high) {
+void quickSort(int arr[], int low, int high) {
     if (low < high) {
         int pi = partition(arr, low, high);
-        quick_sort(arr, low, pi - 1);
-        quick_sort(arr, pi + 1, high);
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
     }
 }
 
-double measure_time(void (*sort_func)(int[], int), int arr[], int size) {
-    auto start = high_resolution_clock::now();
+// قياس الوقت
+double measure_time_bubble(void (*sort_func)(int[], int), int arr[], int size) {
+    clock_t start = clock();
     sort_func(arr, size);
-    auto stop = high_resolution_clock::now();
-    return duration_cast<microseconds>(stop - start).count() / 1e6;
+    clock_t end = clock();
+    return double(end - start) / CLOCKS_PER_SEC;
 }
-
-// قياس الوقت للـ void sort(int[], int, int)
-double measure_time(void (*sort_func)(int[], int, int), int arr[], int l, int r) {
-    auto start = high_resolution_clock::now();
+double measure_time_other(void (*sort_func)(int[], int, int), int arr[], int l, int r) {
+    clock_t start = clock();
     sort_func(arr, l, r);
-    auto stop = high_resolution_clock::now();
-    return duration_cast<microseconds>(stop - start).count() / 1e6;
+    clock_t end = clock();
+    return double(end - start) / CLOCKS_PER_SEC;
 }
 
 int main() {
     srand(time(0));
-    const int sizes[] = {100, 1000, 10000};
-    const char* types[] = {"random", "sorted", "reverse", "partial"};
-
     cout << "Sorting Algorithm Average Execution Time (over " << NUM_RUNS << " runs)\n";
     cout << "Size\tType\t\tBubble Sort\tMerge Sort\tQuick Sort\n";
 
-    for (int size : sizes) {
+    for (int s = 0; s < NUM_SIZES; s++) {
+        int size = sizes[s];
         int* original = new int[size];
 
-        for (const char* type : types) {
+        for (int t = 0; t < NUM_TYPES; t++) {
+            const char* type = types[t];
             double bubble_sum = 0, merge_sum = 0, quick_sum = 0;
 
             for (int run = 0; run < NUM_RUNS; run++) {
@@ -128,13 +144,14 @@ int main() {
                 int* bubble_arr = new int[size];
                 int* merge_arr = new int[size];
                 int* quick_arr = new int[size];
-                copy(original, original + size, bubble_arr);
-                copy(original, original + size, merge_arr);
-                copy(original, original + size, quick_arr);
 
-                bubble_sum += measure_time(bubble_sort, bubble_arr, size);
-                merge_sum  += measure_time(merge_sort, merge_arr, 0, size - 1);
-                quick_sum  += measure_time(quick_sort, quick_arr, 0, size - 1);
+                memcpy(bubble_arr, original, size * sizeof(int));
+                memcpy(merge_arr, original, size * sizeof(int));
+                memcpy(quick_arr, original, size * sizeof(int));
+
+                bubble_sum += measure_time_bubble(bubbleSort, bubble_arr, size);
+                merge_sum  += measure_time_other(mergeSort, merge_arr, 0, size - 1);
+                quick_sum  += measure_time_other(quickSort, quick_arr, 0, size - 1);
 
                 delete[] bubble_arr;
                 delete[] merge_arr;
@@ -145,7 +162,7 @@ int main() {
             double merge_avg = merge_sum / NUM_RUNS;
             double quick_avg = quick_sum / NUM_RUNS;
 
-            cout << size << "\t" << type << "\t" << fixed << setprecision(6)
+            cout << size << "\t" << type << "\t\t" << fixed << setprecision(6)
                  << bubble_avg << " s\t" << merge_avg << " s\t" << quick_avg << " s\n";
         }
 
